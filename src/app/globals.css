@@ -1,0 +1,85 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --amazon-orange: #ff9900;
+    --amazon-dark: #232f3e;
+    --amazon-blue: #00a8e1;
+  }
+
+  body {
+    @apply bg-amazon-light;
+  }
+
+  * {
+    @apply border-gray-200;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-amazon-orange hover:bg-amazon-orange-hover text-white font-medium 
+           px-6 py-3 rounded-xl transition-all duration-200 
+           shadow-md hover:shadow-lg active:scale-95;
+  }
+
+  .btn-secondary {
+    @apply bg-white border-2 border-amazon-orange text-amazon-orange font-medium 
+           px-6 py-3 rounded-xl transition-all duration-200 
+           hover:bg-orange-50 active:scale-95;
+  }
+
+  .card {
+    @apply bg-white rounded-2xl shadow-sm border border-gray-100 
+           p-4 transition-all duration-200 hover:shadow-md;
+  }
+
+  .card-elevated {
+    @apply bg-white rounded-2xl shadow-lg border border-gray-100 p-6;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 rounded-xl border border-gray-200 
+           focus:border-amazon-orange focus:ring-2 focus:ring-amazon-orange/20 
+           outline-none transition-all duration-200 bg-white;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
+  }
+
+  .page-container {
+    @apply max-w-md mx-auto px-4 py-6;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-gradient-to-r from-amazon-orange to-amazon-blue 
+           bg-clip-text text-transparent;
+  }
+
+  .glass {
+    @apply bg-white/80 backdrop-blur-md;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded-full;
+}
+
+/* Map container */
+.mapboxgl-map {
+  border-radius: 1rem;
+}
