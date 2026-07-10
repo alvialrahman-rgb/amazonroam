@@ -16,13 +16,55 @@ export async function generateItinerary(
     Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1
   );
 
-  const itineraries = generateMockItineraries(
-    tripId,
-    startDate,
-    days,
-    tripDraft,
-    user
-  );
+  let itineraries: Itinerary[];
+
+  // Try API with a 8-second timeout, fall back to mock data
+  if (tripDraft.latitude && tripDraft.longitude) {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 8000);
+
+      const response = await fetch("/api/itinerary/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          destination: tripDraft.destination,
+          latitude: tripDraft.latitude,
+          longitude: tripDraft.longitude,
+          startDate,
+          endDate,
+          workStartTime: tripDraft.workStartTime || "09:00",
+          workEndTime: tripDraft.workEndTime || "17:00",
+          interests: user?.interests || ["food", "culture"],
+          energyLevel: user?.energyLevel || "MODERATE",
+          budget: user?.budget || "MODERATE",
+          radius: tripDraft.radius || 20,
+        }),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeout);
+
+      if (response.ok) {
+        const data = await response.json();
+        const hasActivities = data.itineraries?.some(
+          (i: Itinerary) => i.activities && i.activities.length > 0
+        );
+        if (hasActivities) {
+          itineraries = data.itineraries;
+        } else {
+          itineraries = generateMockItineraries(tripId, startDate, days, tripDraft, user);
+        }
+      } else {
+        itineraries = generateMockItineraries(tripId, startDate, days, tripDraft, user);
+      }
+    } catch {
+      // Timeout or network error - use mock data
+      itineraries = generateMockItineraries(tripId, startDate, days, tripDraft, user);
+    }
+  } else {
+    itineraries = generateMockItineraries(tripId, startDate, days, tripDraft, user);
+  }
 
   const trip: Trip = {
     id: tripId,
