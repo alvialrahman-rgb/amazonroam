@@ -97,9 +97,32 @@ function generateMockItineraries(
   const places = getMockPlacesForDestination(destination);
   const interests = user?.interests || ["food", "culture"];
 
-  const relevantPlaces = places.filter((p) =>
-    interests.some((i) => i.toLowerCase() === p.category.toLowerCase())
-  );
+  const relevantPlaces = places.filter((p) => {
+    // Map social interests to place categories
+    const interestToCategory: Record<string, string[]> = {
+      coffee: ["FOOD"],
+      foodie: ["FOOD"],
+      cooking: ["FOOD"],
+      hiking: ["OUTDOORS"],
+      running: ["OUTDOORS"],
+      cycling: ["OUTDOORS"],
+      yoga: ["WELLNESS"],
+      "happy-hour": ["NIGHTLIFE", "FOOD"],
+      music: ["NIGHTLIFE", "ENTERTAINMENT"],
+      "board-games": ["ENTERTAINMENT"],
+      sports: ["OUTDOORS", "ENTERTAINMENT"],
+      photography: ["OUTDOORS", "CULTURE"],
+      reading: ["CULTURE"],
+      "tech-talks": ["CULTURE"],
+      volunteering: ["OUTDOORS"],
+    };
+
+    const matchingCategories = interests.flatMap(
+      (i) => interestToCategory[i] || []
+    );
+
+    return matchingCategories.includes(p.category) || matchingCategories.length === 0;
+  });
 
   const placesToUse = relevantPlaces.length > 0 ? relevantPlaces : places;
 

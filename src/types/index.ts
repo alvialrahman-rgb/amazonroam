@@ -133,3 +133,52 @@ export interface ItineraryGenerateParams {
     radius: number;
   };
 }
+
+// ===== NETWORKING TYPES =====
+
+export type CheckInStatus = "ACTIVE" | "EXPIRED";
+export type ConnectionMode = "IN_PERSON" | "VIRTUAL" | "BOTH";
+
+export interface CheckIn {
+  id: string;
+  userId: string;
+  user: NetworkUser;
+  siteCode: string;
+  siteName: string;
+  arrivalDate: string;
+  departureDate: string;
+  interests: string[];
+  status: CheckInStatus;
+  createdAt: string;
+}
+
+export interface NetworkUser {
+  id: string;
+  amazonAlias: string;
+  displayName: string;
+  title: string;
+  team: string;
+  level: string;
+  siteCode: string;
+  siteName: string;
+  interests: string[];
+  connectionMode: ConnectionMode;
+  avatarColor: string;
+  checkedIn: boolean;
+  arrivalDate?: string;
+  departureDate?: string;
+}
+
+export interface SharedInterest {
+  interest: string;
+  emoji: string;
+}
+
+export interface ConnectionRequest {
+  id: string;
+  fromUser: NetworkUser;
+  toUser: NetworkUser;
+  message?: string;
+  status: "PENDING" | "ACCEPTED" | "DECLINED";
+  createdAt: string;
+}

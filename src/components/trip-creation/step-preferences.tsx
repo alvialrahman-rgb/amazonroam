@@ -3,14 +3,21 @@
 import { useStore } from "@/lib/store";
 
 const interests = [
-  { id: "food", emoji: "🍽️", label: "Food & Dining" },
-  { id: "culture", emoji: "🏛️", label: "Culture & History" },
-  { id: "outdoors", emoji: "🌿", label: "Outdoors & Nature" },
-  { id: "nightlife", emoji: "🍸", label: "Nightlife & Bars" },
-  { id: "wellness", emoji: "🧘", label: "Wellness & Spa" },
-  { id: "shopping", emoji: "🛍️", label: "Shopping" },
-  { id: "entertainment", emoji: "🎭", label: "Entertainment" },
-  { id: "sports", emoji: "⚽", label: "Sports & Fitness" },
+  { id: "coffee", emoji: "☕", label: "Coffee Chats" },
+  { id: "running", emoji: "🏃", label: "Running" },
+  { id: "hiking", emoji: "🥾", label: "Hiking" },
+  { id: "foodie", emoji: "🍜", label: "Foodie" },
+  { id: "happy-hour", emoji: "🍻", label: "Happy Hour" },
+  { id: "board-games", emoji: "🎲", label: "Board Games" },
+  { id: "sports", emoji: "⚽", label: "Sports Fan" },
+  { id: "photography", emoji: "📸", label: "Photography" },
+  { id: "yoga", emoji: "🧘", label: "Yoga & Wellness" },
+  { id: "music", emoji: "🎵", label: "Live Music" },
+  { id: "reading", emoji: "📚", label: "Book Club" },
+  { id: "tech-talks", emoji: "💻", label: "Tech Talks" },
+  { id: "cooking", emoji: "👨\u200D🍳", label: "Cooking" },
+  { id: "cycling", emoji: "🚴", label: "Cycling" },
+  { id: "volunteering", emoji: "🤝", label: "Volunteering" },
 ];
 
 const energyLevels = [
@@ -58,7 +65,7 @@ export function StepPreferences() {
       {/* Interests */}
       <div>
         <p className="text-sm font-medium text-gray-600 mb-3">
-          What are you into? (pick a few)
+          What are you into? (pick up to 5 - these help match you with people)
         </p>
         <div className="grid grid-cols-2 gap-2">
           {interests.map((interest) => {

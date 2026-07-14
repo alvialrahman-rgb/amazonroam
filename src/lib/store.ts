@@ -33,7 +33,7 @@ export const useStore = create<AppState>()(
         amazonAlias: "alvrahma",
         displayName: "Alvi",
         email: "alvrahma@amazon.com",
-        interests: ["food", "culture", "outdoors"],
+        interests: ["coffee", "foodie", "happy-hour", "hiking", "tech-talks"],
         energyLevel: "MODERATE",
         budget: "MODERATE",
         dietaryNeeds: [],

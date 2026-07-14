@@ -95,11 +95,11 @@ export default function HomePage() {
             <p className="text-xs text-gray-400 mt-1">Discover nearby</p>
           </div>
         </Link>
-        <Link href="/community">
+        <Link href="/network">
           <div className="card text-center py-6 hover:border-amazon-blue/30">
             <Users className="w-8 h-8 mx-auto mb-2 text-amazon-blue" />
-            <span className="text-sm font-medium text-gray-700">Community</span>
-            <p className="text-xs text-gray-400 mt-1">Amazon favorites</p>
+            <span className="text-sm font-medium text-gray-700">Network</span>
+            <p className="text-xs text-gray-400 mt-1">Who's here</p>
           </div>
         </Link>
       </motion.div>
