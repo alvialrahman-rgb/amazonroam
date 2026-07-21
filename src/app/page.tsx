@@ -10,6 +10,14 @@ export default function HomePage() {
 
   return (
     <div className="page-container">
+      {/* Prototype Banner */}
+      <div className="bg-amazon-dark/5 border border-amazon-dark/10 rounded-xl px-4 py-2.5 mb-4 flex items-start gap-2">
+        <span className="text-sm mt-0.5">🚧</span>
+        <p className="text-[11px] text-gray-600 leading-relaxed">
+          <span className="font-semibold">Prototype</span> - This is a work-in-progress demo for the AIPXT Challenge. Some features may have limited functionality.
+        </p>
+      </div>
+
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
