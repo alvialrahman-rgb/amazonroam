@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Providers } from "@/components/providers";
+import { AppShell } from "@/components/app-shell";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import "./globals.css";
 
@@ -18,8 +19,10 @@ export default function RootLayout({
     <html lang="en">
       <body className="font-sans bg-amazon-light text-gray-900 antialiased">
         <Providers>
-          <main className="min-h-screen pb-20">{children}</main>
-          <BottomNav />
+          <AppShell>
+            <main className="min-h-screen pb-20">{children}</main>
+            <BottomNav />
+          </AppShell>
         </Providers>
       </body>
     </html>
