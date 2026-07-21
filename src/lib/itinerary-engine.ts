@@ -211,7 +211,7 @@ function generateMockItineraries(
   return itineraries;
 }
 
-function getMockPlacesForDestination(destination: string): Place[] {
+export function getMockPlacesForDestination(destination: string): Place[] {
   const placesByCity: Record<string, Place[]> = {
     "Seattle, WA": [
       {
