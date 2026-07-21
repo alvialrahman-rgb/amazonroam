@@ -98,7 +98,6 @@ function generateMockItineraries(
   const interests = user?.interests || ["food", "culture"];
 
   const relevantPlaces = places.filter((p) => {
-    // Map social interests to place categories
     const interestToCategory: Record<string, string[]> = {
       coffee: ["FOOD"],
       foodie: ["FOOD"],
@@ -124,20 +123,62 @@ function generateMockItineraries(
     return matchingCategories.includes(p.category) || matchingCategories.length === 0;
   });
 
-  const placesToUse = relevantPlaces.length > 0 ? relevantPlaces : places;
+  // Filter by budget if set
+  const budgetMax = user?.budget === "FREE" ? 0 : user?.budget === "LOW" ? 1 : user?.budget === "MODERATE" ? 2 : 4;
+  const budgetFiltered = relevantPlaces.filter(
+    (p) => (p.priceLevel || 0) <= budgetMax
+  );
+
+  const placesToUse = budgetFiltered.length > 0 ? budgetFiltered : relevantPlaces.length > 0 ? relevantPlaces : places;
+
+  // Determine shift pattern
+  const workStart = tripDraft.workStartTime || "09:00";
+  const workEnd = tripDraft.workEndTime || "17:00";
+  const workStartHour = parseInt(workStart.split(":")[0]);
+  const workEndHour = parseInt(workEnd.split(":")[0]);
+  const isNightShift = workStartHour >= 18;
+
+  // Determine work days based on shift pattern
+  const getWorkDays = (): number[] => {
+    if (workStart === "09:00" && workEnd === "17:00") {
+      return [1, 2, 3, 4, 5]; // Mon-Fri (standard 9-5)
+    }
+    if (workStart === "09:00" || workStart === "20:00") {
+      // FHD/FHN: Sun-Wed = [0,1,2,3], BHD/BHN: Wed-Sat = [3,4,5,6]
+      // We can't tell FH from BH by time alone, default to checking if it looks like FH
+      return [0, 1, 2, 3]; // Default to FHD/FHN pattern
+    }
+    return [1, 2, 3, 4, 5]; // Fallback to Mon-Fri
+  };
+
+  const workDays = getWorkDays();
 
   const itineraries: Itinerary[] = [];
 
-  for (let day = 0; day < Math.min(days, 5); day++) {
+  for (let day = 0; day < Math.min(days, 7); day++) {
     const date = new Date(startDate);
     date.setDate(date.getDate() + day);
-    const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+    const dayOfWeek = date.getDay(); // 0=Sun, 6=Sat
+    const isDayOff = !workDays.includes(dayOfWeek);
 
     const dayActivities: Activity[] = [];
-    const workEnd = tripDraft.workEndTime || "17:00";
 
-    const startHour = isWeekend ? 10 : parseInt(workEnd.split(":")[0]) + 1;
-    const numActivities = isWeekend ? 4 : 2;
+    let startHour: number;
+    let numActivities: number;
+
+    if (isDayOff) {
+      // Full day available
+      startHour = 10;
+      numActivities = 4;
+    } else if (isNightShift) {
+      // Night shift worker - free during the day
+      startHour = 9;
+      numActivities = 3;
+    } else {
+      // Day shift worker - free in the evening
+      startHour = workEndHour + 1;
+      numActivities = 2;
+    }
 
     for (let i = 0; i < numActivities && i < placesToUse.length; i++) {
       const placeIndex = (day * numActivities + i) % placesToUse.length;
@@ -283,6 +324,118 @@ function getMockPlacesForDestination(destination: string): Place[] {
         description:
           "Russian-style bathhouse with sauna, steam room, and cold plunge.",
       },
+      {
+        id: "p9",
+        name: "Volunteer Park",
+        category: "OUTDOORS",
+        address: "1247 15th Ave E, Seattle, WA",
+        latitude: 47.6304,
+        longitude: -122.3155,
+        rating: 4.6,
+        amazonRating: 4.5,
+        priceLevel: 0,
+        imageUrl: "",
+        description:
+          "Olmsted-designed park with conservatory, museum, and water tower views.",
+      },
+      {
+        id: "p16",
+        name: "Din Tai Fung",
+        category: "FOOD",
+        address: "700 Bellevue Way NE, Bellevue, WA",
+        latitude: 47.6148,
+        longitude: -122.2007,
+        rating: 4.7,
+        amazonRating: 4.6,
+        priceLevel: 2,
+        imageUrl: "",
+        description:
+          "World-famous soup dumplings. Always a wait, always worth it.",
+      },
+      {
+        id: "p17",
+        name: "The Crocodile",
+        category: "NIGHTLIFE",
+        address: "2505 1st Ave, Seattle, WA",
+        latitude: 47.6157,
+        longitude: -122.3477,
+        rating: 4.5,
+        amazonRating: 4.6,
+        priceLevel: 2,
+        imageUrl: "",
+        description:
+          "Legendary live music venue where Nirvana played. Intimate shows nightly.",
+      },
+      {
+        id: "p18",
+        name: "Olympic Sculpture Park",
+        category: "CULTURE",
+        address: "2901 Western Ave, Seattle, WA",
+        latitude: 47.6166,
+        longitude: -122.3553,
+        rating: 4.6,
+        amazonRating: 4.7,
+        priceLevel: 0,
+        imageUrl: "",
+        description:
+          "Free outdoor sculpture park with waterfront views and art installations.",
+      },
+      {
+        id: "p19",
+        name: "Storyville Coffee",
+        category: "FOOD",
+        address: "1001 1st Ave, Seattle, WA",
+        latitude: 47.6055,
+        longitude: -122.3364,
+        rating: 4.5,
+        amazonRating: 4.4,
+        priceLevel: 1,
+        imageUrl: "",
+        description:
+          "Premium coffee roaster with cozy atmosphere. Perfect for morning work.",
+      },
+      {
+        id: "p20",
+        name: "Gas Works Park",
+        category: "OUTDOORS",
+        address: "2101 N Northlake Way, Seattle, WA",
+        latitude: 47.6456,
+        longitude: -122.3344,
+        rating: 4.5,
+        amazonRating: 4.6,
+        priceLevel: 0,
+        imageUrl: "",
+        description:
+          "Unique park built on old gasification plant. Best city skyline views.",
+      },
+      {
+        id: "p21",
+        name: "Canon",
+        category: "NIGHTLIFE",
+        address: "928 12th Ave, Seattle, WA",
+        latitude: 47.6094,
+        longitude: -122.3167,
+        rating: 4.7,
+        amazonRating: 4.8,
+        priceLevel: 3,
+        imageUrl: "",
+        description:
+          "World-class whiskey bar with 4,000+ bottles. Craft cocktails in Capitol Hill.",
+      },
+      {
+        id: "p22",
+        name: "Vios Cafe",
+        category: "FOOD",
+        address: "903 19th Ave E, Seattle, WA",
+        latitude: 47.6241,
+        longitude: -122.3069,
+        rating: 4.5,
+        amazonRating: 4.4,
+        priceLevel: 2,
+        imageUrl: "",
+        description:
+          "Mediterranean cafe with a kids play area. Great for a relaxed brunch.",
+      },
     ],
     "Austin, TX": [
       {
@@ -365,6 +518,132 @@ function getMockPlacesForDestination(destination: string): Place[] {
         imageUrl: "",
         description:
           "Award-winning Japanese restaurant with innovative dishes.",
+      },
+      {
+        id: "atx1",
+        name: "Zilker Park",
+        category: "OUTDOORS",
+        address: "2100 Barton Springs Rd, Austin, TX",
+        latitude: 30.2669,
+        longitude: -97.7729,
+        rating: 4.7,
+        amazonRating: 4.6,
+        priceLevel: 0,
+        imageUrl: "",
+        description:
+          "351-acre park with trails, botanical gardens, and access to Barton Springs.",
+      },
+      {
+        id: "atx2",
+        name: "Ramen Tatsu-Ya",
+        category: "FOOD",
+        address: "1234 S Lamar Blvd, Austin, TX",
+        latitude: 30.2531,
+        longitude: -97.7648,
+        rating: 4.7,
+        amazonRating: 4.8,
+        priceLevel: 2,
+        imageUrl: "",
+        description:
+          "Best ramen in Texas. Rich tonkotsu broth, always packed.",
+      },
+      {
+        id: "atx3",
+        name: "Rainey Street",
+        category: "NIGHTLIFE",
+        address: "Rainey St, Austin, TX",
+        latitude: 30.2569,
+        longitude: -97.7397,
+        rating: 4.4,
+        amazonRating: 4.3,
+        priceLevel: 2,
+        imageUrl: "",
+        description:
+          "Strip of converted bungalows turned into bars. More chill than 6th St.",
+      },
+      {
+        id: "atx4",
+        name: "The Contemporary Austin",
+        category: "CULTURE",
+        address: "700 Congress Ave, Austin, TX",
+        latitude: 30.2674,
+        longitude: -97.7442,
+        rating: 4.4,
+        amazonRating: 4.5,
+        priceLevel: 2,
+        imageUrl: "",
+        description:
+          "Contemporary art museum with rooftop terrace overlooking Congress Ave.",
+      },
+      {
+        id: "atx5",
+        name: "Tacodeli",
+        category: "FOOD",
+        address: "1500 Spyglass Dr, Austin, TX",
+        latitude: 30.2542,
+        longitude: -97.7813,
+        rating: 4.5,
+        amazonRating: 4.4,
+        priceLevel: 1,
+        imageUrl: "",
+        description:
+          "Austin breakfast taco institution. The Otto is legendary.",
+      },
+      {
+        id: "atx6",
+        name: "Mount Bonnell",
+        category: "OUTDOORS",
+        address: "3800 Mt Bonnell Rd, Austin, TX",
+        latitude: 30.3209,
+        longitude: -97.7733,
+        rating: 4.6,
+        amazonRating: 4.7,
+        priceLevel: 0,
+        imageUrl: "",
+        description:
+          "Short climb to stunning 360-degree views of Lake Austin and the Hill Country.",
+      },
+      {
+        id: "atx7",
+        name: "Broken Spoke",
+        category: "NIGHTLIFE",
+        address: "3201 S Lamar Blvd, Austin, TX",
+        latitude: 30.2385,
+        longitude: -97.7816,
+        rating: 4.5,
+        amazonRating: 4.6,
+        priceLevel: 1,
+        imageUrl: "",
+        description:
+          "Classic Texas honky-tonk since 1964. Two-stepping and cold beer.",
+      },
+      {
+        id: "atx8",
+        name: "Suerte",
+        category: "FOOD",
+        address: "1800 E 6th St, Austin, TX",
+        latitude: 30.2602,
+        longitude: -97.724,
+        rating: 4.7,
+        amazonRating: 4.8,
+        priceLevel: 3,
+        imageUrl: "",
+        description:
+          "Modern Mexican cuisine with house-made masa. One of Austin's best.",
+      },
+      {
+        id: "atx9",
+        name: "Deep Eddy Pool",
+        category: "OUTDOORS",
+        address: "401 Deep Eddy Ave, Austin, TX",
+        latitude: 30.2753,
+        longitude: -97.773,
+        rating: 4.6,
+        amazonRating: 4.5,
+        priceLevel: 1,
+        imageUrl: "",
+        description:
+          "Spring-fed swimming pool open year-round since 1915. Cold and refreshing.",
       },
     ],
     "New York, NY": [
@@ -480,6 +759,118 @@ function getMockPlacesForDestination(destination: string): Place[] {
         description:
           "Luxurious thermal bath experience in a restored 19th-century building.",
       },
+      {
+        id: "ny9",
+        name: "Washington Square Park",
+        category: "OUTDOORS",
+        address: "Washington Square, New York, NY",
+        latitude: 40.7308,
+        longitude: -74.0009,
+        rating: 4.6,
+        amazonRating: 4.5,
+        priceLevel: 0,
+        imageUrl: "",
+        description:
+          "Iconic Greenwich Village park with fountain, chess players, and street performers.",
+      },
+      {
+        id: "ny10",
+        name: "Xi'an Famous Foods",
+        category: "FOOD",
+        address: "81 St Marks Pl, New York, NY",
+        latitude: 40.7278,
+        longitude: -73.9876,
+        rating: 4.5,
+        amazonRating: 4.6,
+        priceLevel: 1,
+        imageUrl: "",
+        description:
+          "Hand-pulled noodles and spicy lamb burgers. Fast, cheap, incredible.",
+      },
+      {
+        id: "ny11",
+        name: "Attaboy",
+        category: "NIGHTLIFE",
+        address: "134 Eldridge St, New York, NY",
+        latitude: 40.7194,
+        longitude: -73.9913,
+        rating: 4.6,
+        amazonRating: 4.7,
+        priceLevel: 3,
+        imageUrl: "",
+        description:
+          "Speakeasy-style cocktail bar. No menu - tell them what you like.",
+      },
+      {
+        id: "ny12",
+        name: "The Whitney Museum",
+        category: "CULTURE",
+        address: "99 Gansevoort St, New York, NY",
+        latitude: 40.7396,
+        longitude: -74.0089,
+        rating: 4.7,
+        amazonRating: 4.8,
+        priceLevel: 2,
+        imageUrl: "",
+        description:
+          "American art museum with outdoor terraces and stunning Hudson River views.",
+      },
+      {
+        id: "ny13",
+        name: "Los Tacos No. 1",
+        category: "FOOD",
+        address: "229 W 43rd St, New York, NY",
+        latitude: 40.7574,
+        longitude: -73.9882,
+        rating: 4.6,
+        amazonRating: 4.5,
+        priceLevel: 1,
+        imageUrl: "",
+        description:
+          "Best tacos in NYC. Adobada on handmade corn tortillas. Cash only.",
+      },
+      {
+        id: "ny14",
+        name: "Prospect Park",
+        category: "OUTDOORS",
+        address: "Prospect Park, Brooklyn, NY",
+        latitude: 40.6602,
+        longitude: -73.969,
+        rating: 4.8,
+        amazonRating: 4.7,
+        priceLevel: 0,
+        imageUrl: "",
+        description:
+          "Brooklyn's 526-acre park. Less crowded than Central Park with a beautiful lake.",
+      },
+      {
+        id: "ny15",
+        name: "QC NY Spa",
+        category: "WELLNESS",
+        address: "Governors Island, New York, NY",
+        latitude: 40.6892,
+        longitude: -74.0168,
+        rating: 4.5,
+        amazonRating: 4.6,
+        priceLevel: 4,
+        imageUrl: "",
+        description:
+          "Italian-style day spa on Governors Island with Statue of Liberty views.",
+      },
+      {
+        id: "ny16",
+        name: "Smorgasburg",
+        category: "FOOD",
+        address: "90 Kent Ave, Brooklyn, NY",
+        latitude: 40.7216,
+        longitude: -73.9614,
+        rating: 4.5,
+        amazonRating: 4.4,
+        priceLevel: 2,
+        imageUrl: "",
+        description:
+          "Weekend outdoor food market with 100+ vendors. Brooklyn's food paradise.",
+      },
     ],
     "San Francisco, CA": [
       {
@@ -593,6 +984,118 @@ function getMockPlacesForDestination(destination: string): Place[] {
         imageUrl: "",
         description:
           "Japanese-style communal bathhouse with hot pool, cold plunge, and steam room.",
+      },
+      {
+        id: "sf9",
+        name: "Dolores Park",
+        category: "OUTDOORS",
+        address: "Dolores Park, San Francisco, CA",
+        latitude: 37.7596,
+        longitude: -122.4269,
+        rating: 4.6,
+        amazonRating: 4.5,
+        priceLevel: 0,
+        imageUrl: "",
+        description:
+          "SF's favorite park for picnics and people-watching. Best city views.",
+      },
+      {
+        id: "sf10",
+        name: "Tartine Manufactory",
+        category: "FOOD",
+        address: "595 Alabama St, San Francisco, CA",
+        latitude: 37.7632,
+        longitude: -122.4116,
+        rating: 4.5,
+        amazonRating: 4.6,
+        priceLevel: 2,
+        imageUrl: "",
+        description:
+          "Expanded bakery-restaurant with sourdough, ice cream, and seasonal dishes.",
+      },
+      {
+        id: "sf11",
+        name: "Trick Dog",
+        category: "NIGHTLIFE",
+        address: "3010 20th St, San Francisco, CA",
+        latitude: 37.7586,
+        longitude: -122.4189,
+        rating: 4.6,
+        amazonRating: 4.7,
+        priceLevel: 2,
+        imageUrl: "",
+        description:
+          "Creative cocktail bar in the Mission with a menu that changes themes annually.",
+      },
+      {
+        id: "sf12",
+        name: "de Young Museum",
+        category: "CULTURE",
+        address: "50 Hagiwara Tea Garden Dr, San Francisco, CA",
+        latitude: 37.7716,
+        longitude: -122.4686,
+        rating: 4.5,
+        amazonRating: 4.6,
+        priceLevel: 2,
+        imageUrl: "",
+        description:
+          "Fine arts museum in Golden Gate Park with an observation tower.",
+      },
+      {
+        id: "sf13",
+        name: "Burma Superstar",
+        category: "FOOD",
+        address: "309 Clement St, San Francisco, CA",
+        latitude: 37.7832,
+        longitude: -122.4637,
+        rating: 4.4,
+        amazonRating: 4.5,
+        priceLevel: 2,
+        imageUrl: "",
+        description:
+          "Burmese restaurant famous for tea leaf salad. Expect a wait.",
+      },
+      {
+        id: "sf14",
+        name: "Crissy Field",
+        category: "OUTDOORS",
+        address: "1199 E Beach, San Francisco, CA",
+        latitude: 37.8038,
+        longitude: -122.4647,
+        rating: 4.7,
+        amazonRating: 4.6,
+        priceLevel: 0,
+        imageUrl: "",
+        description:
+          "Waterfront path with Golden Gate Bridge views. Great for running or walking.",
+      },
+      {
+        id: "sf15",
+        name: "Liholiho Yacht Club",
+        category: "FOOD",
+        address: "871 Sutter St, San Francisco, CA",
+        latitude: 37.7879,
+        longitude: -122.4139,
+        rating: 4.6,
+        amazonRating: 4.7,
+        priceLevel: 3,
+        imageUrl: "",
+        description:
+          "Hawaiian-inspired fine dining with creative cocktails. Fun, lively atmosphere.",
+      },
+      {
+        id: "sf16",
+        name: "Archimedes Banya",
+        category: "WELLNESS",
+        address: "748 Innes Ave, San Francisco, CA",
+        latitude: 37.7351,
+        longitude: -122.3715,
+        rating: 4.4,
+        amazonRating: 4.3,
+        priceLevel: 2,
+        imageUrl: "",
+        description:
+          "Russian-style bathhouse with sauna, cold plunge, and rooftop deck.",
       },
     ],
     "Nashville, TN": [
@@ -708,6 +1211,118 @@ function getMockPlacesForDestination(destination: string): Place[] {
         description:
           "Upscale speakeasy with handcrafted cocktails. No standing, reservation only.",
       },
+      {
+        id: "nv9",
+        name: "Centennial Park",
+        category: "OUTDOORS",
+        address: "2500 West End Ave, Nashville, TN",
+        latitude: 36.1498,
+        longitude: -86.8134,
+        rating: 4.7,
+        amazonRating: 4.6,
+        priceLevel: 0,
+        imageUrl: "",
+        description:
+          "132-acre park home to the Parthenon replica. Great for walking and running.",
+      },
+      {
+        id: "nv10",
+        name: "Loveless Cafe",
+        category: "FOOD",
+        address: "8400 TN-100, Nashville, TN",
+        latitude: 36.0439,
+        longitude: -86.9563,
+        rating: 4.5,
+        amazonRating: 4.6,
+        priceLevel: 2,
+        imageUrl: "",
+        description:
+          "Southern breakfast institution famous for biscuits and country ham since 1951.",
+      },
+      {
+        id: "nv11",
+        name: "Pinewood Social",
+        category: "NIGHTLIFE",
+        address: "33 Peabody St, Nashville, TN",
+        latitude: 36.1622,
+        longitude: -86.768,
+        rating: 4.4,
+        amazonRating: 4.5,
+        priceLevel: 2,
+        imageUrl: "",
+        description:
+          "Coffee by day, cocktails by night. Plus bowling lanes and an outdoor pool.",
+      },
+      {
+        id: "nv12",
+        name: "Frist Art Museum",
+        category: "CULTURE",
+        address: "919 Broadway, Nashville, TN",
+        latitude: 36.1575,
+        longitude: -86.7817,
+        rating: 4.7,
+        amazonRating: 4.8,
+        priceLevel: 2,
+        imageUrl: "",
+        description:
+          "Art Deco building with rotating world-class exhibitions. No permanent collection.",
+      },
+      {
+        id: "nv13",
+        name: "Party Fowl",
+        category: "FOOD",
+        address: "719 8th Ave S, Nashville, TN",
+        latitude: 36.1527,
+        longitude: -86.7802,
+        rating: 4.4,
+        amazonRating: 4.3,
+        priceLevel: 2,
+        imageUrl: "",
+        description:
+          "Hot chicken with a twist - try it on a waffle or in a taco. Great brunch.",
+      },
+      {
+        id: "nv14",
+        name: "Radnor Lake State Park",
+        category: "OUTDOORS",
+        address: "1160 Otter Creek Rd, Nashville, TN",
+        latitude: 36.0622,
+        longitude: -86.81,
+        rating: 4.8,
+        amazonRating: 4.7,
+        priceLevel: 0,
+        imageUrl: "",
+        description:
+          "Protected natural area with 6 hiking trails. Peaceful escape from the city.",
+      },
+      {
+        id: "nv15",
+        name: "Attaboy Nashville",
+        category: "NIGHTLIFE",
+        address: "8 McFerrin Ave, Nashville, TN",
+        latitude: 36.18,
+        longitude: -86.7619,
+        rating: 4.6,
+        amazonRating: 4.7,
+        priceLevel: 3,
+        imageUrl: "",
+        description:
+          "Craft cocktails in an intimate East Nashville space. No menu - trust the bartender.",
+      },
+      {
+        id: "nv16",
+        name: "Five Daughters Bakery",
+        category: "FOOD",
+        address: "1110 Caruthers Ave, Nashville, TN",
+        latitude: 36.15,
+        longitude: -86.7625,
+        rating: 4.6,
+        amazonRating: 4.5,
+        priceLevel: 1,
+        imageUrl: "",
+        description:
+          "100-layer donuts and pastries in 12 South. The cronut before cronuts were a thing.",
+      },
     ],
     "Arlington, VA": [
       {
@@ -821,6 +1436,118 @@ function getMockPlacesForDestination(destination: string): Place[] {
         imageUrl: "",
         description:
           "Stunning stainless steel spires with panoramic views of DC and the Pentagon.",
+      },
+      {
+        id: "ar9",
+        name: "Theodore Roosevelt Island",
+        category: "OUTDOORS",
+        address: "George Washington Pkwy, Arlington, VA",
+        latitude: 38.8959,
+        longitude: -77.0638,
+        rating: 4.6,
+        amazonRating: 4.7,
+        priceLevel: 0,
+        imageUrl: "",
+        description:
+          "88-acre wooded island in the Potomac with trails and memorial. Hidden gem.",
+      },
+      {
+        id: "ar10",
+        name: "Ambar Clarendon",
+        category: "FOOD",
+        address: "2901 Wilson Blvd, Arlington, VA",
+        latitude: 38.8863,
+        longitude: -77.0928,
+        rating: 4.5,
+        amazonRating: 4.6,
+        priceLevel: 2,
+        imageUrl: "",
+        description:
+          "Balkan all-you-can-eat brunch and dinner. Unlimited small plates.",
+      },
+      {
+        id: "ar11",
+        name: "Don Tito",
+        category: "NIGHTLIFE",
+        address: "3165 Wilson Blvd, Arlington, VA",
+        latitude: 38.8869,
+        longitude: -77.0972,
+        rating: 4.3,
+        amazonRating: 4.2,
+        priceLevel: 2,
+        imageUrl: "",
+        description:
+          "Tex-Mex restaurant with rooftop bar and DJs on weekends. Clarendon nightlife staple.",
+      },
+      {
+        id: "ar12",
+        name: "Newseum",
+        category: "CULTURE",
+        address: "1 Freedom Forum, Arlington, VA",
+        latitude: 38.8913,
+        longitude: -77.0193,
+        rating: 4.6,
+        amazonRating: 4.5,
+        priceLevel: 2,
+        imageUrl: "",
+        description:
+          "Interactive museum covering journalism and free press history.",
+      },
+      {
+        id: "ar13",
+        name: "Bob & Edith's Diner",
+        category: "FOOD",
+        address: "2310 Columbia Pike, Arlington, VA",
+        latitude: 38.8569,
+        longitude: -77.0868,
+        rating: 4.4,
+        amazonRating: 4.3,
+        priceLevel: 1,
+        imageUrl: "",
+        description:
+          "24-hour diner serving breakfast all day. Classic American comfort food.",
+      },
+      {
+        id: "ar14",
+        name: "Long Bridge Park",
+        category: "OUTDOORS",
+        address: "475 Long Bridge Dr, Arlington, VA",
+        latitude: 38.8614,
+        longitude: -77.0556,
+        rating: 4.5,
+        amazonRating: 4.4,
+        priceLevel: 0,
+        imageUrl: "",
+        description:
+          "Modern park with synthetic turf fields, walking paths, and Potomac views.",
+      },
+      {
+        id: "ar15",
+        name: "Spider Kelly's",
+        category: "NIGHTLIFE",
+        address: "3181 Wilson Blvd, Arlington, VA",
+        latitude: 38.887,
+        longitude: -77.0976,
+        rating: 4.2,
+        amazonRating: 4.1,
+        priceLevel: 2,
+        imageUrl: "",
+        description:
+          "Classic Clarendon bar with pool tables, darts, and a solid beer selection.",
+      },
+      {
+        id: "ar16",
+        name: "Pupatella",
+        category: "FOOD",
+        address: "5104 Wilson Blvd, Arlington, VA",
+        latitude: 38.883,
+        longitude: -77.115,
+        rating: 4.6,
+        amazonRating: 4.7,
+        priceLevel: 2,
+        imageUrl: "",
+        description:
+          "Neapolitan pizza from a wood-fired oven. Certified by Naples pizza association.",
       },
     ],
     "Vancouver, BC": [
