@@ -86,20 +86,24 @@ export default function HomePage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="grid grid-cols-2 gap-3 mb-8"
+        className="grid grid-cols-3 gap-2 mb-8"
       >
         <Link href="/explore">
-          <div className="card text-center py-6 hover:border-amazon-orange/30">
-            <MapPin className="w-8 h-8 mx-auto mb-2 text-amazon-orange" />
-            <span className="text-sm font-medium text-gray-700">Explore</span>
-            <p className="text-xs text-gray-400 mt-1">Discover nearby</p>
+          <div className="card text-center py-5 hover:border-amazon-orange/30">
+            <MapPin className="w-7 h-7 mx-auto mb-1.5 text-amazon-orange" />
+            <span className="text-xs font-medium text-gray-700">Explore</span>
           </div>
         </Link>
         <Link href="/network">
-          <div className="card text-center py-6 hover:border-amazon-blue/30">
-            <Users className="w-8 h-8 mx-auto mb-2 text-amazon-blue" />
-            <span className="text-sm font-medium text-gray-700">Network</span>
-            <p className="text-xs text-gray-400 mt-1">Who's here</p>
+          <div className="card text-center py-5 hover:border-amazon-blue/30">
+            <Users className="w-7 h-7 mx-auto mb-1.5 text-amazon-blue" />
+            <span className="text-xs font-medium text-gray-700">Network</span>
+          </div>
+        </Link>
+        <Link href="/community">
+          <div className="card text-center py-5 hover:border-purple-300">
+            <Sparkles className="w-7 h-7 mx-auto mb-1.5 text-purple-500" />
+            <span className="text-xs font-medium text-gray-700">Community</span>
           </div>
         </Link>
       </motion.div>

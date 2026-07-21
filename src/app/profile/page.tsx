@@ -1,111 +1,94 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Edit3, MapPin, Award, Globe, Star } from "lucide-react";
+import { Edit3, Check, MapPin, Award, Star, X } from "lucide-react";
 import { useStore } from "@/lib/store";
+import { interestOptions } from "@/lib/mock-network";
 import type { Badge } from "@/types";
 
-const allBadges: Badge[] = [
-  {
-    id: "b1",
-    type: "FIRST_TRIP",
-    label: "First Trip",
-    description: "Planned your first trip",
-    icon: "🎉",
-    earnedAt: "2025-07-08",
-    progress: 1,
-    target: 1,
-  },
-  {
-    id: "b2",
-    type: "EXPLORER",
-    label: "Explorer",
-    description: "Visit 5 different cities",
-    icon: "🧭",
-    progress: 2,
-    target: 5,
-  },
-  {
-    id: "b3",
-    type: "CONNECTOR",
-    label: "Connector",
-    description: "Connect with 5 Amazonians",
-    icon: "🤝",
-    earnedAt: "2025-07-10",
-    progress: 5,
-    target: 5,
-  },
-  {
-    id: "b4",
-    type: "NETWORKER",
-    label: "Super Networker",
-    description: "Connect with 20 Amazonians",
-    icon: "🌐",
-    progress: 5,
-    target: 20,
-  },
-  {
-    id: "b5",
-    type: "FOODIE",
-    label: "Foodie",
-    description: "Visit 10 restaurants",
-    icon: "🍕",
-    progress: 3,
-    target: 10,
-  },
-  {
-    id: "b6",
-    type: "CHECK_IN_STREAK",
-    label: "Regular",
-    description: "Check in 3 trips in a row",
-    icon: "🔥",
-    progress: 1,
-    target: 3,
-  },
-  {
-    id: "b7",
-    type: "REVIEWER",
-    label: "Reviewer",
-    description: "Write 5 reviews",
-    icon: "✍️",
-    progress: 0,
-    target: 5,
-  },
-  {
-    id: "b8",
-    type: "GLOBETROTTER",
-    label: "Globetrotter",
-    description: "Visit 10 different sites",
-    icon: "✈️",
-    progress: 2,
-    target: 10,
-  },
-];
-
-const interestEmojis: Record<string, string> = {
-  coffee: "☕",
-  running: "🏃",
-  hiking: "🥾",
-  foodie: "🍜",
-  "happy-hour": "🍻",
-  "board-games": "🎲",
-  sports: "⚽",
-  photography: "📸",
-  yoga: "🧘",
-  music: "🎵",
-  reading: "📚",
-  "tech-talks": "💻",
-  cooking: "👨\u200D🍳",
-  cycling: "🚴",
-  volunteering: "🤝",
-};
-
 export default function ProfilePage() {
-  const { user, trips } = useStore();
+  const { user, updateUserInterests, updateUserBudget, updateUserEnergy, stats, trips, favorites } = useStore();
+  const [isEditing, setIsEditing] = useState(false);
+  const [editInterests, setEditInterests] = useState<string[]>(user?.interests || []);
+
+  const allBadges: Badge[] = [
+    {
+      id: "b1",
+      type: "FIRST_TRIP",
+      label: "First Trip",
+      description: "Planned your first trip",
+      icon: "🎉",
+      earnedAt: stats.tripsPlanned >= 1 ? "earned" : undefined,
+      progress: stats.tripsPlanned,
+      target: 1,
+    },
+    {
+      id: "b2",
+      type: "EXPLORER",
+      label: "Explorer",
+      description: "Plan 5 trips",
+      icon: "🧭",
+      earnedAt: stats.tripsPlanned >= 5 ? "earned" : undefined,
+      progress: stats.tripsPlanned,
+      target: 5,
+    },
+    {
+      id: "b3",
+      type: "CONNECTOR",
+      label: "Connector",
+      description: "Connect with 5 Amazonians",
+      icon: "🤝",
+      earnedAt: stats.connectionsMade >= 5 ? "earned" : undefined,
+      progress: stats.connectionsMade,
+      target: 5,
+    },
+    {
+      id: "b4",
+      type: "NETWORKER",
+      label: "Super Networker",
+      description: "Connect with 20 Amazonians",
+      icon: "🌐",
+      earnedAt: stats.connectionsMade >= 20 ? "earned" : undefined,
+      progress: stats.connectionsMade,
+      target: 20,
+    },
+    {
+      id: "b5",
+      type: "REVIEWER",
+      label: "Reviewer",
+      description: "Submit 3 favorites",
+      icon: "✍",
+      earnedAt: stats.favoritesSubmitted >= 3 ? "earned" : undefined,
+      progress: stats.favoritesSubmitted,
+      target: 3,
+    },
+    {
+      id: "b6",
+      type: "CHECK_IN",
+      label: "Regular",
+      description: "Check in 3 times",
+      icon: "🔥",
+      earnedAt: stats.checkIns >= 3 ? "earned" : undefined,
+      progress: stats.checkIns,
+      target: 3,
+    },
+  ];
 
   const earnedBadges = allBadges.filter((b) => b.earnedAt);
   const inProgressBadges = allBadges.filter((b) => !b.earnedAt && (b.progress || 0) > 0);
   const lockedBadges = allBadges.filter((b) => !b.earnedAt && (b.progress || 0) === 0);
+
+  const handleSaveProfile = () => {
+    updateUserInterests(editInterests);
+    setIsEditing(false);
+  };
+
+  const toggleEditInterest = (id: string) => {
+    setEditInterests((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id].slice(0, 5)
+    );
+  };
 
   return (
     <div className="page-container">
@@ -115,13 +98,6 @@ export default function ProfilePage() {
         animate={{ opacity: 1, y: 0 }}
         className="card-elevated text-center mb-6 relative"
       >
-        <button
-          className="absolute top-4 right-4 p-2 rounded-lg hover:bg-gray-100 transition-colors"
-          aria-label="Edit profile"
-        >
-          <Edit3 className="w-4 h-4 text-gray-400" />
-        </button>
-
         <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-amazon-orange to-amazon-blue flex items-center justify-center text-white text-2xl font-bold mb-3">
           {user?.displayName?.charAt(0) || "A"}
         </div>
@@ -131,50 +107,106 @@ export default function ProfilePage() {
         <p className="text-sm text-gray-500">@{user?.amazonAlias || "alias"}</p>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-gray-100">
+        <div className="grid grid-cols-4 gap-3 mt-4 pt-4 border-t border-gray-100">
           <div className="text-center">
-            <p className="text-lg font-bold text-amazon-dark">
-              {trips.length}
-            </p>
+            <p className="text-lg font-bold text-amazon-dark">{trips.length}</p>
             <p className="text-[10px] text-gray-400">Trips</p>
           </div>
           <div className="text-center">
-            <p className="text-lg font-bold text-amazon-dark">
-              {earnedBadges.length}
-            </p>
+            <p className="text-lg font-bold text-amazon-dark">{earnedBadges.length}</p>
             <p className="text-[10px] text-gray-400">Badges</p>
           </div>
           <div className="text-center">
-            <p className="text-lg font-bold text-amazon-dark">0</p>
+            <p className="text-lg font-bold text-amazon-dark">{favorites.length}</p>
             <p className="text-[10px] text-gray-400">Reviews</p>
+          </div>
+          <div className="text-center">
+            <p className="text-lg font-bold text-amazon-dark">{stats.connectionsMade}</p>
+            <p className="text-[10px] text-gray-400">Connects</p>
           </div>
         </div>
       </motion.div>
 
-      {/* Interests */}
+      {/* Interests - Editable */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
         className="mb-6"
       >
-        <h3 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
-          <Star className="w-4 h-4 text-amazon-orange" />
-          Interests
-        </h3>
-        <div className="flex flex-wrap gap-2">
-          {user?.interests?.map((interest) => (
-            <span
-              key={interest}
-              className="badge bg-amazon-orange/10 text-amazon-orange py-1.5 px-3"
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-semibold text-gray-800 flex items-center gap-2">
+            <Star className="w-4 h-4 text-amazon-orange" />
+            Interests
+          </h3>
+          {!isEditing ? (
+            <button
+              onClick={() => {
+                setEditInterests(user?.interests || []);
+                setIsEditing(true);
+              }}
+              className="text-xs text-amazon-orange font-medium flex items-center gap-1"
             >
-              {interestEmojis[interest] || "✨"} {interest}
-            </span>
-          ))}
+              <Edit3 className="w-3 h-3" /> Edit
+            </button>
+          ) : (
+            <div className="flex gap-2">
+              <button
+                onClick={() => setIsEditing(false)}
+                className="text-xs text-gray-400 font-medium flex items-center gap-1"
+              >
+                <X className="w-3 h-3" /> Cancel
+              </button>
+              <button
+                onClick={handleSaveProfile}
+                className="text-xs text-amazon-teal font-medium flex items-center gap-1"
+              >
+                <Check className="w-3 h-3" /> Save
+              </button>
+            </div>
+          )}
         </div>
+
+        {!isEditing ? (
+          <div className="flex flex-wrap gap-2">
+            {user?.interests?.map((interest) => {
+              const opt = interestOptions.find((o) => o.id === interest);
+              return (
+                <span
+                  key={interest}
+                  className="badge bg-amazon-orange/10 text-amazon-orange py-1.5 px-3"
+                >
+                  {opt?.emoji || "✨"} {opt?.label || interest}
+                </span>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-1.5">
+            {interestOptions.map((opt) => {
+              const isSelected = editInterests.includes(opt.id);
+              return (
+                <button
+                  key={opt.id}
+                  onClick={() => toggleEditInterest(opt.id)}
+                  className={`badge py-2 px-3 text-left transition-all ${
+                    isSelected
+                      ? "bg-amazon-orange/10 text-amazon-orange border border-amazon-orange/30"
+                      : "bg-gray-50 text-gray-600 border border-transparent"
+                  }`}
+                >
+                  {opt.emoji} {opt.label}
+                </button>
+              );
+            })}
+            <p className="col-span-2 text-[10px] text-gray-400 mt-1">
+              Select up to 5 interests ({editInterests.length}/5)
+            </p>
+          </div>
+        )}
       </motion.div>
 
-      {/* Badges Section */}
+      {/* Badges */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -185,11 +217,10 @@ export default function ProfilePage() {
           Badges & Achievements
         </h3>
 
-        {/* Earned */}
         {earnedBadges.length > 0 && (
           <div className="mb-4">
             <p className="text-xs text-gray-500 mb-2">Earned</p>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               {earnedBadges.map((badge) => (
                 <div
                   key={badge.id}
@@ -205,7 +236,6 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {/* In Progress */}
         {inProgressBadges.length > 0 && (
           <div className="mb-4">
             <p className="text-xs text-gray-500 mb-2">In Progress</p>
@@ -217,12 +247,10 @@ export default function ProfilePage() {
                     <p className="text-sm font-medium text-gray-800">
                       {badge.label}
                     </p>
-                    <p className="text-[10px] text-gray-400">
-                      {badge.description}
-                    </p>
+                    <p className="text-[10px] text-gray-400">{badge.description}</p>
                     <div className="mt-1.5 h-1.5 bg-gray-200 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-amazon-orange rounded-full transition-all"
+                        className="h-full bg-amazon-orange rounded-full"
                         style={{
                           width: `${((badge.progress || 0) / (badge.target || 1)) * 100}%`,
                         }}
@@ -238,16 +266,12 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {/* Locked */}
         {lockedBadges.length > 0 && (
           <div>
             <p className="text-xs text-gray-500 mb-2">Locked</p>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               {lockedBadges.map((badge) => (
-                <div
-                  key={badge.id}
-                  className="card text-center py-3 opacity-40"
-                >
+                <div key={badge.id} className="card text-center py-3 opacity-40">
                   <span className="text-2xl grayscale">{badge.icon}</span>
                   <p className="text-[9px] font-medium text-gray-500 mt-1">
                     {badge.label}

@@ -48,6 +48,7 @@ export default function ExplorePage() {
   const [selectedBudget, setSelectedBudget] = useState("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(30);
 
   const allPlaces = useMemo(() => getAllPlaces(), []);
 
@@ -181,7 +182,7 @@ export default function ExplorePage() {
 
       {/* Results */}
       <div className="space-y-3">
-        {filteredPlaces.slice(0, 30).map((place, index) => (
+        {filteredPlaces.slice(0, visibleCount).map((place, index) => (
           <motion.div
             key={place.id}
             initial={{ opacity: 0, y: 15 }}
@@ -261,10 +262,13 @@ export default function ExplorePage() {
           </div>
         )}
 
-        {filteredPlaces.length > 30 && (
-          <p className="text-center text-xs text-gray-400 py-2">
-            Showing 30 of {filteredPlaces.length} results
-          </p>
+        {filteredPlaces.length > visibleCount && (
+          <button
+            onClick={() => setVisibleCount((prev) => prev + 30)}
+            className="btn-secondary w-full text-sm"
+          >
+            Load More ({filteredPlaces.length - visibleCount} remaining)
+          </button>
         )}
       </div>
     </div>

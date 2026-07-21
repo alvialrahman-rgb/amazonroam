@@ -11,6 +11,7 @@ import {
   ChevronRight,
   Search,
 } from "lucide-react";
+import Link from "next/link";
 import { useStore } from "@/lib/store";
 import {
   mockNetworkUsers,
@@ -54,11 +55,19 @@ export default function NetworkPage() {
   return (
     <div className="page-container">
       {/* Header */}
-      <div className="mb-5">
-        <h1 className="text-2xl font-bold text-amazon-dark">Network</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Find Amazonians near you with shared interests
-        </p>
+      <div className="flex items-center justify-between mb-5">
+        <div>
+          <h1 className="text-2xl font-bold text-amazon-dark">Network</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Find Amazonians near you with shared interests
+          </p>
+        </div>
+        <Link
+          href="/checkin"
+          className="badge bg-amazon-orange text-white py-2 px-3 text-xs font-medium"
+        >
+          Check In
+        </Link>
       </div>
 
       {/* Site Selector */}
@@ -304,6 +313,17 @@ function PersonCard({
                   className="btn-primary w-full text-sm flex items-center justify-center gap-2"
                   onClick={(e) => {
                     e.stopPropagation();
+                    // Track the connection
+                    if (typeof window !== "undefined") {
+                      const stored = localStorage.getItem("amazonroam-storage");
+                      if (stored) {
+                        const data = JSON.parse(stored);
+                        if (data.state?.stats) {
+                          data.state.stats.connectionsMade = (data.state.stats.connectionsMade || 0) + 1;
+                          localStorage.setItem("amazonroam-storage", JSON.stringify(data));
+                        }
+                      }
+                    }
                     window.open(
                       `https://slack.com/app_redirect?channel=${person.amazonAlias}`,
                       "_blank"
