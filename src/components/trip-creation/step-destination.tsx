@@ -5,7 +5,12 @@ import { MapPin, Search } from "lucide-react";
 import { useStore } from "@/lib/store";
 
 const popularDestinations = [
+  { name: "Vancouver, BC", lat: 49.2827, lng: -123.1207, emoji: "🏔" },
   { name: "Seattle, WA", lat: 47.6062, lng: -122.3321, emoji: "🌲" },
+  { name: "Oakville, ON", lat: 43.4675, lng: -79.6877, emoji: "🍁" },
+  { name: "Stoney Creek, ON", lat: 43.2173, lng: -79.7164, emoji: "🌊" },
+  { name: "Cambridge, ON", lat: 43.3616, lng: -80.3144, emoji: "🦋" },
+  { name: "Kitchener, ON", lat: 43.4516, lng: -80.4925, emoji: "🍺" },
   { name: "Austin, TX", lat: 30.2672, lng: -97.7431, emoji: "🤠" },
   { name: "New York, NY", lat: 40.7128, lng: -74.006, emoji: "🗽" },
   { name: "San Francisco, CA", lat: 37.7749, lng: -122.4194, emoji: "🌉" },
